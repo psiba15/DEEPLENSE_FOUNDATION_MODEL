@@ -13,13 +13,13 @@ So basically I built a Vision Transformer that learns from unlabeled data using 
 The whole pipeline looks like this:
 
 Galaxy Image (48x48 pixels) 
-    ↓
+    ->
 Cut into 144 tiny patches (4x4 each)
-    ↓
+    ->
 Vision Transformer Encoder (10 layers deep. this thing is BEEFY)
-    ↓
+    ->
 Classification Head (couple dense layers with dropout)
-    ↓
+    ->
 Output: "LENS" or "NO LENS"
 
 But heres the cool part that I added later. *Theres also a physics module that checks if the predictions make sense according to Einsteins equations.*
