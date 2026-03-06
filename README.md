@@ -27,7 +27,8 @@ If the model says "this galaxy has 10^13 solar masses of dark matter" then the p
 Its called a PINN (Physics Informed Neural Network) and honestly I didnt even know thats what I was building until I was like halfway done lmao.
 
 The Complete Journey (buckle up)
-**Phase 1: CIFAR-100 Pre-training - 250 Epochs of Pure Chaos**
+
+# Phase 1: CIFAR-100 Pre-training - 250 Epochs of Pure Chaos
 Okay so I started with this idea. What if instead of using ImageNet weights (which everyone does) I train my own encoder from scratch using Masked Autoencoders?
 The concept is actually insane when you think about it. You take an image. You HIDE 90% OF IT. Just straight up delete it. Then you ask the model "yo can you reconstruct the whole thing from just 10%?"
 Most papers use 75% masking but I was like nah lets go HARDER. 90% masking. Only 14 out of 144 patches visible. The rest? Pure guessing.
@@ -52,7 +53,7 @@ The blurriness is actually GOOD. If it was pixel perfect that would mean memoriz
 
 
 
-**Phase 2: DeepLense Domain Adaptation - 130 More Epochs**
+# Phase 2: DeepLense Domain Adaptation - 130 More Epochs
 Now I had an encoder that understood natural images really well. But space images? Completely different world. Grayscale. Noisy. Black backgrounds with tiny bright spots. The distribution is NOTHING like CIFAR-100.
 So I did domain adaptation. Took my CIFAR trained encoder and continued MAE training on 50,000 unlabeled telescope images from the DeepLense dataset.
 
@@ -86,7 +87,7 @@ Zero regrets
 
 
 
-**Phase 3: Fine tunning - The Moment of Truth**
+# Phase 3: Fine tunning - The Moment of Truth
 Okay so now I have this encoder thats been trained for 380 epochs on 100,000 unlabeled images total. Its seen natural images. Its seen space images. It UNDERSTANDS structure.
 Time to actually classify some lenses.
 The Setup:
@@ -124,7 +125,7 @@ Honestly pretty understandable failures. Even astronomers struggle with these ed
 
 
 
-**Phase 4: Adding Physics (The PINN Adventure)**
+# Phase 4: Adding Physics (The PINN Adventure)
 Okay so at this point I was like "91% is great but can we make the predictions more... scientifically valid?"
 Because heres the thing. The model might predict "dark matter present" but it doesnt know if the AMOUNT of dark matter makes sense. Like it could predict a massive dark matter halo but a tiny Einstein ring which is physically impossible.
 So I decided to add Einsteins gravitational lensing equation as a constraint.
@@ -152,22 +153,22 @@ pythondef compute_einstein_radius(mass_normalized, D_L, D_S, D_LS):
   Takes predicted mass and distances
   Returns expected Einstein radius according to physics
     
-  # Convert normalized mass back to actual kg
+   Convert normalized mass back to actual kg
   log_mass = mass_normalized * 2.0 + 11.0  # range [11,13] = [10^11, 10^13] solar masses
       mass_kg = tf.pow(10.0, log_mass) * 1.989e30
       
-   # Convert distances to meters
+    Convert distances to meters
    D_L_meters = (D_L * 2900 + 100) * 3.086e22  # Mpc to meters
       D_S_meters = (D_S * 2900 + 100) * 3.086e22
       D_LS_meters = (D_LS * 2900 + 100) * 3.086e22
     
-  # Einsteins formula (this is the actual physics!)
+   Einsteins formula (this is the actual physics!)
   schwarzschild_term = (4.0 * 6.674e-11 * mass_kg) / (3e8 ** 2)
     geometry_term = D_LS_meters / (D_L_meters * D_S_meters + 1e-30)  # tiny epsilon to avoid division by zero
     
   theta_radians = tf.sqrt(schwarzschild_term * geometry_term + 1e-30)  # another epsilon for sqrt stability
     
-  # Convert to arcseconds (astronomers love arcseconds)
+   Convert to arcseconds (astronomers love arcseconds)
   theta_arcsec = theta_radians * 206265.0
     
   return theta_arcsec
