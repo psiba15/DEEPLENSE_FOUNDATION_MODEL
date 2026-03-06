@@ -1,4 +1,4 @@
-🌌 **Self-Supervised Dark Matter Detection with Vision Transformers**
+🌌 # Self-Supervised Dark Matter Detection with Vision Transformers
 
 Started with "hmm what if I try MAE on space images" and ended up building something that combines cutting-edge self-supervised learning with gravitational lensing physics to hunt for invisible matter in the universe. Wild ride honestly.
 
@@ -28,7 +28,7 @@ Its called a PINN (Physics Informed Neural Network) and honestly I didnt even kn
 
 The Complete Journey (buckle up)
 
-# Phase 1: CIFAR-100 Pre-training - 250 Epochs of Pure Chaos
+## Phase 1: CIFAR-100 Pre-training - 250 Epochs of Pure Chaos
 Okay so I started with this idea. What if instead of using ImageNet weights (which everyone does) I train my own encoder from scratch using Masked Autoencoders?
 The concept is actually insane when you think about it. You take an image. You HIDE 90% OF IT. Just straight up delete it. Then you ask the model "yo can you reconstruct the whole thing from just 10%?"
 Most papers use 75% masking but I was like nah lets go HARDER. 90% masking. Only 14 out of 144 patches visible. The rest? Pure guessing.
@@ -53,7 +53,7 @@ The blurriness is actually GOOD. If it was pixel perfect that would mean memoriz
 
 
 
-# Phase 2: DeepLense Domain Adaptation - 130 More Epochs
+## Phase 2: DeepLense Domain Adaptation - 130 More Epochs
 Now I had an encoder that understood natural images really well. But space images? Completely different world. Grayscale. Noisy. Black backgrounds with tiny bright spots. The distribution is NOTHING like CIFAR-100.
 So I did domain adaptation. Took my CIFAR trained encoder and continued MAE training on 50,000 unlabeled telescope images from the DeepLense dataset.
 
@@ -87,7 +87,7 @@ Zero regrets
 
 
 
-# Phase 3: Fine tunning - The Moment of Truth
+## Phase 3: Fine tunning - The Moment of Truth
 Okay so now I have this encoder thats been trained for 380 epochs on 100,000 unlabeled images total. Its seen natural images. Its seen space images. It UNDERSTANDS structure.
 Time to actually classify some lenses.
 The Setup:
@@ -125,7 +125,7 @@ Honestly pretty understandable failures. Even astronomers struggle with these ed
 
 
 
-# Phase 4: Adding Physics (The PINN Adventure)
+## Phase 4: Adding Physics (The PINN Adventure)
 Okay so at this point I was like "91% is great but can we make the predictions more... scientifically valid?"
 Because heres the thing. The model might predict "dark matter present" but it doesnt know if the AMOUNT of dark matter makes sense. Like it could predict a massive dark matter halo but a tiny Einstein ring which is physically impossible.
 So I decided to add Einsteins gravitational lensing equation as a constraint.
