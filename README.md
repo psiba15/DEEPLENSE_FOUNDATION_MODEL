@@ -129,12 +129,12 @@ Honestly pretty understandable failures. Even astronomers struggle with these ed
 
 Guys... I’m still shaking.  
 After weeks of fighting NaNs, NameErrors, output name mismatches, and "why won’t this stupid thing load weights", we **finally did it**.  
-I turned our Lens-MAE into a **real physics-informed beast** — and the results are honestly blowing my mind.
+I turned our Lens-MAE into a **real physics-informed beast** and the results are honestly blowing my mind.
 
 ### What I Actually Built (and Survived)
 
 - Attached a tiny auxiliary head that predicts the **Einstein radius θ_E** straight from the image (those beautiful arcs and rings the model already learned to see during MAE pretraining)  
-- Scaled the sigmoid output → realistic [0–5] arcsec range  
+- Scaled the sigmoid output : realistic [0–5] arcsec range  
 - Wrote a custom **physics prior loss** from scratch that gently slaps the model whenever θ_E dares to go outside **0.5–3.0 arcsec** (the real-world sweet spot for galaxy strong lenses – SLACS/BELLS numbers)  
 - Trained everything end-to-end: 90% classification + 10% physics penalty  
 - Used dummy targets for the physics head (because we don’t have ground-truth θ_E — and we don’t need them!)  
@@ -149,7 +149,7 @@ I turned our Lens-MAE into a **real physics-informed beast** — and the results
 - Confusion matrix:  
   - No Lens: **98 correct out of 100** (only 2 false alarms – insane!)  
   - Lens: **82 correct out of 100** (caught most subtle arcs)  
-→ Only **20 mistakes** on 200 images. For a transferred MAE encoder + small data? **I’m proud af.**
+ Only **20 mistakes** on 200 images. For a transferred MAE encoder + small data? **I’m proud af.**
 
 **Physics side – literally perfect constraint**  
 - **100%** of all 200 validation predictions landed inside [0.5–3.0] arcsec — ZERO violations  
@@ -163,15 +163,15 @@ I turned our Lens-MAE into a **real physics-informed beast** — and the results
 - Yellow circles roughly showing the predicted ring size  
 - Green text everywhere (mostly correct!)  
 - A couple red ones where it slipped — but even those have realistic θ_E  
-→ Seeing the model draw yellow rings on actual lensing arcs? **Chills. Literal chills.**
+ Seeing the model draw yellow rings on actual lensing arcs? **Chills. Literal chills.**
 
 ### Why I’m Losing My Mind Over This
 
 This isn’t just “add a head and call it PINN”.  
 - The physics prior **actually enforced** physical realism without any cheating (no fake distances/mass data)  
-- Classification still got **better** while obeying physics — no trade-off penalty  
+- Classification still got **better** while obeying physics , no trade-off penalty  
 - Mean θ_E ~1.44 arcsec is **exactly** what real strong lenses look like  
-- 100% in-range on every single validation sample → proof the constraint is rock-solid
+- 100% in-range on every single validation sample -> proof the constraint is rock-solid
 - ANYWAYS, I AM HAPPY IT ALL WORKEDDDDDDDDDDDD!!!!
  
 
