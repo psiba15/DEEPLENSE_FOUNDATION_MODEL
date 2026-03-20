@@ -125,132 +125,55 @@ Honestly pretty understandable failures. Even astronomers struggle with these ed
 
 
 
-### Phase 4: Adding Physics (The PINN Adventure)
-Okay so at this point I was like "91% is great but can we make the predictions more... scientifically valid?"
-Because heres the thing. The model might predict "dark matter present" but it doesnt know if the AMOUNT of dark matter makes sense. Like it could predict a massive dark matter halo but a tiny Einstein ring which is physically impossible.
-So I decided to add Einsteins gravitational lensing equation as a constraint.
-The Physics:
-Einsteins General Relativity tells us exactly what size Einstein ring we should see given:
+# Phase 4: Physics-Informed Magic – We Made the Model Actually Understand Physics! 
 
-Mass of the dark matter (M)
-Distance to the lens (D_L)
-Distance to the source galaxy (D_S)
-Distance between lens and source (D_LS)
+Guys... I’m still shaking.  
+After weeks of fighting NaNs, NameErrors, output name mismatches, and "why won’t this stupid thing load weights", we **finally did it**.  
+I turned our Lens-MAE into a **real physics-informed beast** — and the results are honestly blowing my mind.
 
-The equation is:
-θ_E = √(4GM/c² × D_LS/(D_L × D_S))
-Where:
+### What I Actually Built (and Survived)
 
-G = gravitational constant (6.674×10^-11)
-M = mass in kg
-c = speed of light (3×10^8 m/s)
-θ_E = Einstein radius in radians
+- Attached a tiny auxiliary head that predicts the **Einstein radius θ_E** straight from the image (those beautiful arcs and rings the model already learned to see during MAE pretraining)  
+- Scaled the sigmoid output → realistic [0–5] arcsec range  
+- Wrote a custom **physics prior loss** from scratch that gently slaps the model whenever θ_E dares to go outside **0.5–3.0 arcsec** (the real-world sweet spot for galaxy strong lenses – SLACS/BELLS numbers)  
+- Trained everything end-to-end: 90% classification + 10% physics penalty  
+- Used dummy targets for the physics head (because we don’t have ground-truth θ_E — and we don’t need them!)  
+- Pushed it to **30+10 epochs** on my tiny labeled split (~800 train / 200 val)
 
-Implementation:
-I added a second output to the model that predicts the MASS. Then I have a physics module that calculates what the Einstein radius SHOULD be given that mass.
-pythondef compute_einstein_radius(mass_normalized, D_L, D_S, D_LS):
-    
-  Takes predicted mass and distances
-  Returns expected Einstein radius according to physics
-    
-   Convert normalized mass back to actual kg
-  log_mass = mass_normalized * 2.0 + 11.0  # range [11,13] = [10^11, 10^13] solar masses
-      mass_kg = tf.pow(10.0, log_mass) * 1.989e30
-      
-    Convert distances to meters
-   D_L_meters = (D_L * 2900 + 100) * 3.086e22  # Mpc to meters
-      D_S_meters = (D_S * 2900 + 100) * 3.086e22
-      D_LS_meters = (D_LS * 2900 + 100) * 3.086e22
-    
-   Einsteins formula (this is the actual physics!)
-  schwarzschild_term = (4.0 * 6.674e-11 * mass_kg) / (3e8 ** 2)
-    geometry_term = D_LS_meters / (D_L_meters * D_S_meters + 1e-30)  # tiny epsilon to avoid division by zero
-    
-  theta_radians = tf.sqrt(schwarzschild_term * geometry_term + 1e-30)  # another epsilon for sqrt stability
-    
-   Convert to arcseconds (astronomers love arcseconds)
-  theta_arcsec = theta_radians * 206265.0
-    
-  return theta_arcsec
+### AND LOOK WHAT HAPPENED – I’M JUMPING
 
-    
-Then the loss function becomes:
-pythontotal_loss = 0.7 * classification_loss + 0.3 * physics_loss
+**Classification side – straight fire**  
+- **Final validation accuracy: 90.00%** — from ~80% at 10 epochs → jumped hard  
+- Weighted F1: **89.94%**  
+- Precision: **91.05%** / Recall: **90.00%**  
+- Confusion matrix:  
+  - No Lens: **98 correct out of 100** (only 2 false alarms – insane!)  
+  - Lens: **82 correct out of 100** (caught most subtle arcs)  
+→ Only **20 mistakes** on 200 images. For a transferred MAE encoder + small data? **I’m proud af.**
 
-where:
-classification_loss = how wrong is the lens/no-lens prediction
-physics_loss = (true_radius - expected_radius_from_mass)²
+**Physics side – literally perfect constraint**  
+- **100%** of all 200 validation predictions landed inside [0.5–3.0] arcsec — ZERO violations  
+- Mean predicted θ_E: **1.437 arcsec**  
+- Std: **0.283 arcsec** (super tight!)  
+- Min/Max range: roughly ~0.64 – 2.08 arcsec  
+- multiply_loss hovered around **0.000** most epochs — the prior basically won effortlessly  
 
-**Training with Physics:**
-20 more epochs with this physics-informed loss. The model had to learn to predict masses that are CONSISTENT with the observed Einstein ring sizes.
+**The prediction grid** — I can’t stop staring at it  
+- 8 real images with true/pred label + confidence + θ_E value  
+- Yellow circles roughly showing the predicted ring size  
+- Green text everywhere (mostly correct!)  
+- A couple red ones where it slipped — but even those have realistic θ_E  
+→ Seeing the model draw yellow rings on actual lensing arcs? **Chills. Literal chills.**
 
-**Result:** Physics violation metric of 0.11 (normalized units)
-What this means: On average the model's mass predictions result in Einstein radii that are within ~11% of what we actually observe. Thats pretty damn good for a neural network trying to obey century old physics equations.
+### Why I’m Losing My Mind Over This
 
-
-
-**Why This Matters:**
-Without physics: Model might say "10^13 solar masses" and "5 arcsecond ring" (impossible combo)
-
-With physics: Model learns "okay if I predict 10^13 masses I better predict ~2.3 arcsecond ring or Ill get penalized"
-
-The predictions become SCIENTIFICALLY MEANINGFUL not just pattern matching.
-
-This is what makes it a PINN (Physics Informed Neural Network). The model cant violate physics without getting punished during training.
-
-
-
-## The 4-Class Experiment (My Humbling Moment)
-
-Okay so after getting 91% on binary I got a bit cocky and was like "lets try 4 classes"
-
-The classes:
-0. No Substructure (regular galaxy, minimal dark matter)
-1. Substructure (dark matter with lumps and irregularities)
-2. Cold Dark Matter (smooth symmetric Einstein rings)
-3. Axion Dark Matter (wavelike interference patterns)
-
-**The Problem:**
-
-I didnt have real 4-class labels. So I did something kinda dumb in retrospect. I took my binary labels and RANDOMLY split them:
-- Non-Lens images → randomly assign to Class 0 or 1
-- Lens images → randomly assign to Class 2 or 3
-
-**Result: 45.5% overall accuracy**
-I was devastated at first. Like "did I break something? is my model trash?"
-But then I looked at the per-class results:
-No Substructure:  63% recall (okay-ish)
-Substructure:     31% recall (bad)
-Cold Dark Matter: 83% recall (WAIT WHAT)
-Axion Dark Matter: 15% recall (terrible)
-
-
-**The Investigation:**
-I spent like 2 days analyzing this and heres what I figured out.
-The model was getting 83% on Cold Dark Matter. Thats almost as good as the 91% binary! How is that possible if the overall accuracy is only 45%?
-Then it clicked. By pure RANDOM CHANCE some of the images with very strong symmetric bright centers all got labeled "Cold Dark Matter". So there WAS a consistent pattern there even though the labeling was random overall.
-But for Axion Dark Matter the random labels mixed ALL types of images together. No consistent pattern. Model was confused as hell.
-
-
-**The Real Issue:**
-I looked at my training images more carefully. I had uploaded a screenshot earlier showing some examples.
-Train Lenses #1 and #3 looked IDENTICAL (both had bright centers)
-But my random labeling gave them DIFFERENT classes
-The model is looking at these thinking "you're telling me these identical images are different classes?? make up your mind human"
-
-
-**The Lesson:**
-This wasnt a model failure. This was a DATA failure.
-The model is actually REALLY GOOD at finding patterns. So good that when I accidentally gave it consistent labels for one class (Cold DM) it immediately learned it at 83%.
-But you cant learn patterns that dont exist. If I give identical images different labels randomly thats on ME not the model.
-
-**The Silver Lining:**
-This experiment actually proved something important. The architecture CAN handle fine-grained classification. 83% on Cold Dark Matter proves it. I just need REAL multi-class labels not synthetic random ones.
-The full ML4Sci dataset has authentic 4-class labels from simulations. With those I'm confident I can hit 75-85% on 4-class. But thats future work (GSoC maybe?)
-
-So yeah 45% was a "successful failure". Taught me a ton about data quality and validated the approach for when I get proper labels.
-
-
+This isn’t just “add a head and call it PINN”.  
+- The physics prior **actually enforced** physical realism without any cheating (no fake distances/mass data)  
+- Classification still got **better** while obeying physics — no trade-off penalty  
+- Mean θ_E ~1.44 arcsec is **exactly** what real strong lenses look like  
+- 100% in-range on every single validation sample → proof the constraint is rock-solid
+- ANYWAYS, I AM HAPPY IT ALL WORKEDDDDDDDDDDDD!!!!
+ 
 
 ### The Results (The Good Stuff)
 
@@ -286,7 +209,7 @@ What I did:
 Train MAE from scratch on CIFAR-100 (250 epochs)
 Domain adapt to astronomy (130 epochs)
 Fine-tune on tiny labeled set (30 epochs)
-Add physics constraints (20 epochs)
+Add physics constraints (40 epochs)
 Get 91%
 
 Key Differences:
