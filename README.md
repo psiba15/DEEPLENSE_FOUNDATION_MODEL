@@ -1,4 +1,4 @@
-#  🌌 Self-Supervised Dark Matter Detection with Vision Transformers
+#  🌌 Self-Supervised Learning For Dark Matter Detection 
 
 Started with "hmm what if I try MAE on space images" and ended up building something that combines cutting-edge self-supervised learning with gravitational lensing physics to hunt for invisible matter in the universe. Wild ride honestly.
 
