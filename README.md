@@ -125,7 +125,7 @@ Honestly pretty understandable failures. Even astronomers struggle with these ed
 
 
 
-# Phase 4: Physics-Informed Magic – We Made the Model Actually Understand Physics! 
+### Phase 4: Physics-Informed Magic – We Made the Model Actually Understand Physics! 
 
 Guys... I’m still shaking.  
 After weeks of fighting NaNs, NameErrors, output name mismatches, and "why won’t this stupid thing load weights", we **finally did it**.  
@@ -189,20 +189,6 @@ Confusion Matrix:
 True Non-Lens    93       7
 True Lens        11      89
 
-Compared to Literature
-ApproachAccuracyNotesBasic CNN from scratch~60-65%Overfits badlyTransfer Learning (ImageNet -> DeepLense)~70-75%Standard approachPrevious SOTA~75%Published papersMy Approach (MAE + PINN)91.0%This work
-Thats a +21% improvement over previous best. Not bad honestly.
-Sample Efficiency
-Most methods: Need 10,000+ labeled images for 85% accuracy
-My method: Need 1,000 labeled images for 91% accuracy
-Thats 10x more sample efficient. The pre-training on 100K unlabeled images is doing HEAVY lifting here.
-Physics Validation
-
-Physics violation: 0.11 (normalized)
-Mass-radius consistency: 89% within 15% margin
-Physically impossible predictions: Basically zero
-
-The PINN part is working. Predictions respect General Relativity.
 
 
 What I did:
@@ -226,5 +212,4 @@ ML4Sci for organizing GSoC and providing the DeepLense dataset
 Alexey Dosovitskiy et al. for Vision Transformers
 My project addiction for keeping me awake through 380 epochs of training
 That moment at 4 AM when I realized the reconstructions were preserving spatial structure
-Einstein for General Relativity (the physics module wouldnt exist without you buddy)
 Kaggle for free GPUs (seriously you guys are amazing)
