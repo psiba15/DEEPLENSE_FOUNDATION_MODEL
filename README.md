@@ -48,7 +48,7 @@ Epoch 250: Final loss 0.087. The reconstructions were honestly beautiful. Blurry
 
 I remember sitting there at 3 AM watching epoch 250 finish and just staring at the reconstructions thinking "Np way I just taught an AI to understand images without ANY labels"
 Key Insight I Had:
-The blurriness is actually GOOD. If it was pixel perfect that would mean memorization. The blur means its learning CONCEPTS not TEXTURES. And for astronomy where images are noisy anyway this is exactly what you want.
+The blurriness is actually GOOD. If it was pixel perfect that would mean memorization. The blur means its learning CONCEPTS not TEXTURES. And for astronomy where images are noisy anyway this is exactly what you want..
 
 
 
